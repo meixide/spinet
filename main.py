@@ -1,9 +1,25 @@
+import random
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from lassonet.interfaces import LassoNetIntervalRegressor, LassoNetIntervalRegressorCV
 
 from generate import generate
+from stability import stability_selection
+
+##########################################
+# Reproducibility
+##########################################
+# Three independent sources of randomness have to be pinned. `generate`
+# draws from numpy, the subsampling inside stability selection uses
+# `random.shuffle`, and the network is initialised from torch's global
+# generator. Seeding numpy alone still leaves the subsample draws and the
+# initial weights free to vary from run to run.
+SEED = 0
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
 
 # Number of individuals to be simulated
 n = 3000
@@ -11,10 +27,12 @@ n = 3000
 p = 100
 X, y = generate(n, p)
 
-model = LassoNetIntervalRegressor(hidden_dims=(10, 10))
+model = LassoNetIntervalRegressor(
+    hidden_dims=(10, 10), torch_seed=SEED, random_state=SEED
+)
 
 
-oracle, order, wrong, paths, prob = model.stability_selection(X, y, n_models=20)
+oracle, order, wrong, paths, prob = stability_selection(model, X, y, n_models=20)
 
 
 def pi_thr(x, F):
@@ -54,8 +72,10 @@ X12, y12 = X[: d1 + d2], y[: d1 + d2]
 ##########################################
 
 
-model = LassoNetIntervalRegressor(hidden_dims=(10, 10))
-oracle1, order1, *_ = model.stability_selection(X1, y1, n_models=20)
+model = LassoNetIntervalRegressor(
+    hidden_dims=(10, 10), torch_seed=SEED, random_state=SEED
+)
+oracle1, order1, *_ = stability_selection(model, X1, y1, n_models=20)
 features1 = order1[:oracle1]
 print("Features selected by stability selection =", features1)
 
@@ -67,8 +87,10 @@ print("C-index for sample-splitting =", model.score(X3[:, features1], y3))
 ##########################################
 # Without sample-splitting
 ##########################################
-model = LassoNetIntervalRegressor(hidden_dims=(10, 10))
-oracle12, order12, *_ = model.stability_selection(X12, y12, n_models=20)
+model = LassoNetIntervalRegressor(
+    hidden_dims=(10, 10), torch_seed=SEED, random_state=SEED
+)
+oracle12, order12, *_ = stability_selection(model, X12, y12, n_models=20)
 features12 = order12[:oracle12]
 print("Features selected by stability selection =", features12)
 model.fit(X12[:, features12], y12, dense_only=True)
@@ -78,6 +100,8 @@ print("C-index without sample-splitting =", model.score(X3[:, features12], y3))
 ##########################################
 # Cross-validation
 ##########################################
-cv_model = LassoNetIntervalRegressorCV(hidden_dims=(10, 10))
+cv_model = LassoNetIntervalRegressorCV(
+    hidden_dims=(10, 10), torch_seed=SEED, random_state=SEED
+)
 cv_model.fit(X12, y12)
 print("C-index for cross-validation =", cv_model.score(X3, y3))
