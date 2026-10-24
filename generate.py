@@ -44,18 +44,19 @@ def nonlin_gen(mean_vector, sigma):
             latent_time_u[i] = checkup_times[np.max(np.nonzero(attended_before_event))]
         else:
             delta_1[i] = 1
-            latent_time_u[i] = 1e-5
 
         if np.any(attended_after_event):
             latent_time_v[i] = checkup_times[np.min(np.nonzero(attended_after_event))]
         else:
             delta_3[i] = 1
-            latent_time_v[i] = 9999
 
         delta_2[i] = 1 - delta_1[i] - delta_3[i]
 
-        if latent_time_v[i] < latent_time_u[i]:
-            latent_time_u[i], latent_time_v[i] = latent_time_v[i], latent_time_u[i]
+        # case-2 encoding used by the likelihood: T <= U if delta_1, T > V if delta_3
+        if delta_1[i]:
+            latent_time_u[i] = latent_time_v[i]
+        if delta_3[i]:
+            latent_time_v[i] = latent_time_u[i]
 
     return np.column_stack((latent_time_u, latent_time_v, delta_1, delta_2, delta_3))
 
