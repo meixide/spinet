@@ -6,7 +6,6 @@ import torch
 from lassonet.interfaces import LassoNetIntervalRegressor, LassoNetIntervalRegressorCV
 
 from generate import generate
-from stability import stability_selection
 
 ##########################################
 # Reproducibility
@@ -32,7 +31,7 @@ model = LassoNetIntervalRegressor(
 )
 
 
-oracle, order, wrong, paths, prob = stability_selection(model, X, y, n_models=20)
+oracle, order, wrong, paths, prob = model.stability_selection(X, y, n_models=20)
 
 
 def pi_thr(x, F):
@@ -75,7 +74,7 @@ X12, y12 = X[: d1 + d2], y[: d1 + d2]
 model = LassoNetIntervalRegressor(
     hidden_dims=(10, 10), torch_seed=SEED, random_state=SEED
 )
-oracle1, order1, *_ = stability_selection(model, X1, y1, n_models=20)
+oracle1, order1, *_ = model.stability_selection(X1, y1, n_models=20)
 features1 = order1[:oracle1]
 print("Features selected by stability selection =", features1)
 
@@ -90,7 +89,7 @@ print("C-index for sample-splitting =", model.score(X3[:, features1], y3))
 model = LassoNetIntervalRegressor(
     hidden_dims=(10, 10), torch_seed=SEED, random_state=SEED
 )
-oracle12, order12, *_ = stability_selection(model, X12, y12, n_models=20)
+oracle12, order12, *_ = model.stability_selection(X12, y12, n_models=20)
 features12 = order12[:oracle12]
 print("Features selected by stability selection =", features12)
 model.fit(X12[:, features12], y12, dense_only=True)
