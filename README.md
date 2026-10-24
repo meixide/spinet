@@ -39,7 +39,7 @@ $$\frac{E(V)}{p} \leq \frac{1}{2 \pi_{\mathrm{thr}}-1} \frac{q_{\Lambda}^2}{p^2}
 The code is integrated in [LassoNet](https://github.com/lasso-net/lassonet).
 
 ```
-pip install lassonet
+pip install "lassonet>=0.0.21"
 ```
 
 ## Usage
